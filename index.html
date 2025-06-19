@@ -1,11 +1,1739 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>甜蜜小游戏</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+    body {
+      background-color: #fff2f5;
+      color: #333;
+      padding: 16px;
+      max-width: 500px;
+      margin: 0 auto;
+      min-height: 100vh;
+      overflow-x: hidden; /* 防止水平滚动 */
+    }
+    .container {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(255, 105, 180, 0.15);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      color: #ff69b4;
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 24px;
+    }
+    .status {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+    .money {
+      font-weight: bold;
+      color: #ff69b4;
+    }
+    .message {
+      background-color: #f8f8f8;
+      border-left: 4px solid #ff69b4;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 0 8px 8px 0;
+      line-height: 1.5;
+    }
+    .dice {
+      font-size: 48px;
+      text-align: center;
+      margin: 16px 0;
+      height: 60px;
+    }
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    button {
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #ff5ba7;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .choice-btn {
+      background-color: #ffb6c1;
+    }
+    .progress {
+      height: 10px;
+      background-color: #f8f8f8;
+      border-radius: 5px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background-color: #ff69b4;
+      border-radius: 5px;
+      transition: width 0.5s;
+    }
+    .hide {
+      display: none;
+    }
+    .event-icon {
+      font-size: 24px;
+      margin-right: 8px;
+    }
+    .blessing {
+      color: #ff69b4;
+      font-weight: bold;
+    }
+    .input-area {
+      margin-top: 16px;
+    }
+    .input-area input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+    .final-message {
+      text-align: center;
+      padding: 20px;
+      background-color: #fff2f5;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .red-packet {
+      font-size: 36px;
+      text-align: center;
+      margin: 16px 0;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .history {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 16px;
+      padding: 8px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+    }
+    .history-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .mode-btn {
+      padding: 15px 10px;
+      text-align: center;
+      background-color: #ffd1dc;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .mode-btn:hover {
+      background-color: #ff9baf;
+      transform: translateY(-2px);
+    }
+    .mode-btn.active {
+      background-color: #ff69b4;
+      color: white;
+    }
+    .mode-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .mode-desc {
+      font-size: 12px;
+      color: #666;
+    }
+    .admin-panel {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      max-width: 300px;
+    }
+    .admin-input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .mode-indicator {
+      background-color: #f0f0f0;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    .game-played-notice {
+      background-color: #ffe0e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      text-align: center;
+      font-weight: bold;
+      color: #ff4081;
+    }
+    .admin-trigger {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      background-color: transparent;
+      z-index: 99;
+    }
+
+    /* 轻提示样式 */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      width: 80%;
+      max-width: 300px;
+    }
+    .toast {
+      background-color: #ff69b4;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      transform: translateY(-20px);
+      text-align: center;
+      font-size: 14px;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
 </head>
 <body>
-  1111111
+  <!-- 轻提示容器 -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div id="admin-trigger" class="admin-trigger"></div>
+  <div id="admin-panel" class="admin-panel hide">
+    <h3>管理员重置</h3>
+    <input type="password" id="admin-password" class="admin-input" placeholder="请输入管理员密码">
+    <button id="admin-reset">重置游戏</button>
+  </div>
+
+  <div id="mode-selection" class="container">
+    <h1>甜蜜小游戏</h1>
+    <div id="played-notice" class="game-played-notice hide">
+      您已经玩过一次游戏啦~<br>
+      以下是您上次的游戏记录
+    </div>
+    <div id="mode-container">
+      <p>请选择游戏难度模式：</p>
+      <div class="mode-grid" id="mode-grid">
+        <!-- 模式将由JavaScript动态填充 -->
+      </div>
+      <div style="text-align: center; margin-top: 20px;">
+        <button id="secret-mode-btn" style="background-color: #ff69b4; padding: 10px 20px;">
+          解锁隐藏模式 💖
+        </button>
+      </div>
+      <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #666;">
+        Designed by LX
+      </div>
+    </div>
+  </div>
+
+  <div id="game-container" class="container hide">
+    <h1>甜蜜小游戏</h1>
+    <div class="mode-indicator" id="mode-indicator">模式1: 初恋甜蜜</div>
+    <div class="status">
+      <div>👸 资金: <span id="player-money" class="money">5.2</span>元</div>
+      <div>🤖 奖池: <span id="bot-money" class="money">20</span>元</div>
+    </div>
+    <div class="progress">
+      <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+    </div>
+    <div id="message" class="message">
+      宝贝，我们来玩个超甜小游戏！<br>
+      你初始资金💰：5.2元（我爱你哟~）<br>
+      我出奖池，赚到目标金额我就认输！<br>
+    </div>
+    <div id="dice" class="dice"></div>
+    <div id="buttons" class="buttons">
+      <button id="start-btn">开始游戏</button>
+    </div>
+    <div id="input-area" class="input-area hide">
+      <input type="text" id="input-text" placeholder="请输入...">
+      <button id="submit-btn">确定</button>
+    </div>
+  </div>
+
+  <div id="history-container" class="container hide">
+    <h1>游戏记录</h1>
+    <div id="history" class="history"></div>
+    <div style="margin-top: 20px; text-align: center;">
+      <button id="reset-game-btn" style="background-color: #ff4081;">重置游戏</button>
+    </div>
+  </div>
+
+  <div id="reset-modal" class="hide" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;">
+    <div style="background-color: white; padding: 20px; border-radius: 10px; width: 80%; max-width: 300px;">
+      <h3 style="text-align: center; margin-bottom: 15px;">输入管理员密码</h3>
+      <input type="password" id="reset-password" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd;" placeholder="请输入密码">
+      <div style="display: flex; justify-content: space-between;">
+        <button id="cancel-reset" style="background-color: #ccc; flex: 1; margin-right: 10px;">取消</button>
+        <button id="confirm-reset" style="background-color: #ff4081; flex: 1;">确认重置</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="secret-mode-modal" class="hide" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;">
+    <div style="background-color: white; padding: 20px; border-radius: 10px; width: 80%; max-width: 300px;">
+      <h3 style="text-align: center; margin-bottom: 15px;">输入隐藏模式密码</h3>
+      <input type="password" id="secret-mode-password" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd;" placeholder="请输入密码">
+      <div style="display: flex; justify-content: space-between;">
+        <button id="cancel-secret" style="background-color: #ccc; flex: 1; margin-right: 10px;">取消</button>
+        <button id="confirm-secret" style="background-color: #ff69b4; flex: 1;">确认</button>
+      </div>
+    </div>
+  </div>
+
+    <script>
+    // 管理员密码
+    const ADMIN_PASSWORD = "lx6666";
+
+    // 隐藏模式密码
+    const SECRET_MODE_PASSWORD = "zly6666";
+
+    // 创建轻提示函数
+    function showToast(message, duration = 3000) {
+      const toastContainer = document.getElementById('toast-container');
+
+      // 创建提示元素
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+
+      // 添加到容器
+      toastContainer.appendChild(toast);
+
+      // 显示提示
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 10);
+
+      // 自动关闭
+      setTimeout(() => {
+        toast.classList.remove('show');
+
+        // 移除元素
+        setTimeout(() => {
+          toastContainer.removeChild(toast);
+        }, 300);
+      }, duration);
+    };
+
+    // 游戏模式配置
+    const GAME_MODES = [
+      {
+        id: 1,
+        name: "初恋甜蜜",
+        description: "温柔的初恋体验，稳定收益",
+        playerMoney: 5.2,
+        botMoney: 20,
+        target: 15,
+        winChance: 0.6, // 60%赢，40%输
+        loseChance: 0.4,
+        eventMultiplier: 1.0,
+        maxLoss: 2.0, // 可能会亏一点
+        maxWin: 10.0  // 最多赢10元
+      },
+      {
+        id: 2,
+        name: "暧昧浪漫",
+        description: "轻松浪漫，收益与风险并存",
+        playerMoney: 5.2,
+        botMoney: 30,
+        target: 20,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 1.2,
+        maxLoss: 3.0, // 可能会亏一些
+        maxWin: 20.0  // 最多赢20元
+      },
+      {
+        id: 3,
+        name: "热恋告白",
+        description: "甜蜜剧情，风险与收益平衡",
+        playerMoney: 5.2,
+        botMoney: 40,
+        target: 25,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 1.5,
+        maxLoss: 4.0, // 可能会亏更多
+        maxWin: 30.0  // 最多赢30元
+      },
+      {
+        id: 4,
+        name: "缠绵密语",
+        description: "更多甜蜜故事，风险与回报并存",
+        playerMoney: 5.2,
+        botMoney: 50,
+        target: 30,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 1.8,
+        maxLoss: 5.0, // 可能会亏更多
+        maxWin: 40.0  // 最多赢40元
+      },
+      {
+        id: 5,
+        name: "甜蜜平衡",
+        description: "赚赔平衡，剧情更丰富",
+        playerMoney: 5.2,
+        botMoney: 60,
+        target: 35,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 2.0,
+        maxLoss: 5.0, // 可能会亏很多
+        maxWin: 50.0  // 最多赢50元
+      },
+      {
+        id: 6,
+        name: "情侣挑战",
+        description: "有一定风险的甜蜜体验",
+        playerMoney: 5.2,
+        botMoney: 70,
+        target: 40,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 2.2,
+        maxLoss: 5.0, // 可能会亏很多
+        maxWin: 60.0  // 最多赢60元
+      },
+      {
+        id: 7,
+        name: "爱情冒险",
+        description: "更高风险伴随更高收益",
+        playerMoney: 5.2,
+        botMoney: 80,
+        target: 45,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 2.5,
+        maxLoss: 5.0, // 可能会亏很多
+        maxWin: 70.0  // 最多赢70元
+      },
+      {
+        id: 8,
+        name: "激情四射",
+        description: "大起大落的刺激体验",
+        playerMoney: 5.2,
+        botMoney: 90,
+        target: 50,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 3.0,
+        maxLoss: 5.0, // 可能会亏很多
+        maxWin: 80.0  // 最多赢80元
+      },
+      {
+        id: 9,
+        name: "爱的考验",
+        description: "高风险高回报的浪漫之旅",
+        playerMoney: 5.2,
+        botMoney: 100,
+        target: 55,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 3.5,
+        maxLoss: 5.0, // 可能会亏很多
+        maxWin: 90.0  // 最多赢90元
+      },
+      {
+        id: 10,
+        name: "至死不渝",
+        description: "极致体验，大起大落",
+        playerMoney: 5.2,
+        botMoney: 110,
+        target: 60,
+        winChance: 0.6,
+        loseChance: 0.4,
+        eventMultiplier: 4.0,
+        maxLoss: 5.2, // 可能会输光
+        maxWin: 100.0 // 最多赢100元
+      },
+      {
+        id: 99, // 隐藏模式
+        name: "甜蜜宝藏",
+        description: "✨隐藏模式✨ 100%赢钱，小额稳赚",
+        playerMoney: 5.2,
+        botMoney: 50,
+        target: 15,
+        winChance: 1.0, // 100%赢，0%输
+        loseChance: 0.0,
+        eventMultiplier: 0.8,
+        maxLoss: 0.0, // 不会亏钱
+        maxWin: 5.0,  // 最多赢5元
+        isHidden: true // 标记为隐藏模式
+      }
+    ];
+
+    // 游戏基础事件列表 - 会根据模式动态扩展
+    const BASE_EVENTS = [
+      {
+        type: 'good',
+        icon: '✨',
+        title: '抓到小精灵',
+        description: '获得精灵祝福：下次收益翻倍！',
+        effect: () => {
+          gameState.blessing = true;
+          return 0;
+        }
+      },
+      {
+        type: 'good',
+        icon: '💼',
+        title: '冒险开奶茶店',
+        description: '生意兴隆，客人络绎不绝！',
+        effect: (dice) => {
+          const amount = dice * 0.5;
+          return gameState.blessing ? amount * 2 : amount;
+        }
+      },
+      {
+        type: 'bad',
+        icon: '😿',
+        title: '遇到小吃货',
+        description: '请我吃冰淇淋🍦，花费1元～',
+        effect: () => -1
+      },
+      {
+        type: 'good',
+        icon: '🎫',
+        title: '刮刮乐中奖',
+        description: '喜提现金奖励！',
+        effect: (dice) => dice * 0.4
+      },
+      {
+        type: 'bad',
+        icon: '⛈️',
+        title: '突然下雨',
+        description: '打车回家花费0.8元',
+        effect: () => -0.8
+      },
+      {
+        type: 'good',
+        icon: '🌈',
+        title: '路边捡到彩虹伞',
+        description: '不仅免费，还附赠现金！',
+        effect: () => 1
+      },
+      {
+        type: 'good',
+        icon: '🎁',
+        title: '周年纪念日',
+        description: '你送她礼物🎁，她感动转账',
+        effect: (dice) => dice * 0.8
+      },
+      {
+        type: 'bad',
+        icon: '📱',
+        title: '网购冲动症',
+        description: '看到喜欢的东西买下了',
+        effect: () => -0.5
+      },
+      {
+        type: 'good',
+        icon: '💸',
+        title: '理财有道',
+        description: '投资小有所成',
+        effect: (dice) => dice * 0.3
+      },
+      {
+        type: 'good',
+        icon: '🎯',
+        title: '参加抽奖活动',
+        description: '好运爆棚中奖了！',
+        effect: () => 2
+      }
+    ];
+
+    // 额外事件集合，根据模式难度逐渐解锁
+    const EXTRA_EVENTS = {
+      good: [
+        {
+          icon: '💝',
+          title: '收到惊喜礼物',
+          description: '恋人送了一份惊喜礼物，附带现金红包',
+          effect: (dice) => dice * 0.6
+        },
+        {
+          icon: '🏆',
+          title: '赢得比赛奖金',
+          description: '参加了当地的才艺比赛，获得奖金',
+          effect: (dice) => dice * 0.7
+        },
+        {
+          icon: '💌',
+          title: '收到告白信',
+          description: '信中附带了对方的心意和一点零花钱',
+          effect: () => 1.5
+        },
+        {
+          icon: '🎊',
+          title: '生日派对',
+          description: '朋友们送上祝福和红包',
+          effect: (dice) => dice * 0.5 + 1
+        },
+        {
+          icon: '👑',
+          title: '成为幸运顾客',
+          description: '商场活动中被选为幸运顾客，获得购物券',
+          effect: () => 2.5
+        },
+        {
+          icon: '🧧',
+          title: '收到压岁钱',
+          description: '长辈给了一个大红包',
+          effect: (dice) => dice + 1
+        },
+        {
+          icon: '🎵',
+          title: '街头演唱',
+          description: '即兴街头演唱，路人打赏',
+          effect: (dice) => dice * 0.4 + 0.5
+        },
+        {
+          icon: '🍀',
+          title: '捡到四叶草',
+          description: '带来好运，下次收益增加50%',
+          effect: () => {
+            gameState.luckyClover = true;
+            return 0.5;
+          }
+        },
+        {
+          icon: '💑',
+          title: '甜蜜约会',
+          description: '对方主动买单并给予小惊喜',
+          effect: () => 1.8
+        },
+        {
+          icon: '🌟',
+          title: '闪耀时刻',
+          description: '意外成为网红，获得品牌合作',
+          effect: (dice) => dice * 1.2
+        },
+        // 新增甜蜜事件
+        {
+          icon: '🌸',
+          title: '花海漫步',
+          description: '在花海中漫步，恋人送你一朵漂亮的花，花中有小惊喜',
+          effect: () => 1.2
+        },
+        {
+          icon: '🎭',
+          title: '街头艺术表演',
+          description: '参与街头艺术表演，获得赞赏和打赏',
+          effect: (dice) => dice * 0.5 + 0.8
+        },
+        {
+          icon: '🍫',
+          title: '巧克力惊喜',
+          description: '收到一盒手工巧克力，内藏爱的信息和小红包',
+          effect: () => 1.6
+        },
+        {
+          icon: '💃',
+          title: '舞会主角',
+          description: '在舞会上成为焦点，获得特别奖励',
+          effect: (dice) => dice * 0.8
+        },
+        {
+          icon: '🏝️',
+          title: '海滩幸运日',
+          description: '在海滩上捡到一个漂亮的贝壳，内有一张彩票',
+          effect: (dice) => dice * 0.7 + 1
+        },
+        {
+          icon: '🍰',
+          title: '甜品店惊喜',
+          description: '在甜品店成为第1000位顾客，获得免单和奖金',
+          effect: () => 2.2
+        },
+        {
+          icon: '🎈',
+          title: '气球惊喜',
+          description: '收到一束气球，每个气球里都藏着小纸条和零钱',
+          effect: (dice) => dice * 0.3 + 1.5
+        },
+        {
+          icon: '📚',
+          title: '书中秘密',
+          description: '在喜欢的书中发现藏着的钱币和甜蜜留言',
+          effect: () => 1.4
+        },
+        {
+          icon: '🧚',
+          title: '幸运精灵眷顾',
+          description: '被幸运精灵眷顾，随身物品价值上涨',
+          effect: (dice) => dice * 0.9
+        },
+        {
+          icon: '🎬',
+          title: '电影片场偶遇',
+          description: '在电影片场偶遇明星，获得签名周边和奖励',
+          effect: () => 2.0
+        }
+      ],
+      bad: [
+        {
+          icon: '🚗',
+          title: '交通罚单',
+          description: '不小心闯红灯被罚款',
+          effect: () => -1.2
+        },
+        {
+          icon: '📉',
+          title: '投资失误',
+          description: '股票下跌，损失一些资金',
+          effect: (dice) => -dice * 0.3
+        },
+        {
+          icon: '☔',
+          title: '大雨天',
+          description: '手机被雨水淋湿，需要维修',
+          effect: () => -1.5
+        },
+        {
+          icon: '🤒',
+          title: '小感冒',
+          description: '需要买药和营养品',
+          effect: () => -0.7
+        },
+        {
+          icon: '🎮',
+          title: '游戏充值',
+          description: '忍不住给喜欢的游戏充了值',
+          effect: (dice) => -dice * 0.25
+        },
+        {
+          icon: '🛍️',
+          title: '购物狂欢',
+          description: '忍不住在购物节买了很多东西',
+          effect: (dice) => -dice * 0.4 - 0.5
+        },
+        {
+          icon: '🍽️',
+          title: '大餐消费',
+          description: '和朋友聚餐，AA制付款',
+          effect: () => -1.8
+        },
+        {
+          icon: '📲',
+          title: '手机更新',
+          description: '旧手机不行了，买了新配件',
+          effect: (dice) => -dice * 0.5
+        },
+        {
+          icon: '🚇',
+          title: '地铁卡丢失',
+          description: '月卡丢失，需要补办',
+          effect: () => -0.9
+        },
+        {
+          icon: '📚',
+          title: '买新书',
+          description: '看到喜欢的书籍，忍不住买下',
+          effect: () => -1.1
+        },
+        // 新增风险事件
+        {
+          icon: '🎸',
+          title: '音乐会消费',
+          description: '为了看喜欢的演唱会买了贵票',
+          effect: (dice) => -dice * 0.6 - 0.4
+        },
+        {
+          icon: '🧣',
+          title: '季节换装',
+          description: '季节变化，购买了新衣物',
+          effect: () => -1.6
+        },
+        {
+          icon: '🎂',
+          title: '生日礼物',
+          description: '为恋人准备了贵重生日礼物',
+          effect: (dice) => -dice * 0.7
+        },
+        {
+          icon: '🏠',
+          title: '家具更新',
+          description: '更换了一些小家具和装饰品',
+          effect: () => -2.0
+        },
+        {
+          icon: '🎁',
+          title: '节日送礼',
+          description: '节日期间给亲友准备了礼物',
+          effect: (dice) => -dice * 0.3 - 0.7
+        },
+        {
+          icon: '🚖',
+          title: '打车费用',
+          description: '一周多次打车，累计花费不少',
+          effect: () => -1.4
+        },
+        {
+          icon: '☕',
+          title: '咖啡上瘾',
+          description: '一周内多次光顾高级咖啡店',
+          effect: () => -1.3
+        },
+        {
+          icon: '💄',
+          title: '美妆消费',
+          description: '购买了一些心仪已久的美妆产品',
+          effect: (dice) => -dice * 0.4 - 0.3
+        },
+        {
+          icon: '🎨',
+          title: '艺术展门票',
+          description: '参观了一个高价值的艺术展览',
+          effect: () => -1.7
+        },
+        {
+          icon: '🔧',
+          title: '日常维修',
+          description: '家中物品需要维修，支付了费用',
+          effect: (dice) => -dice * 0.3 - 0.4
+        }
+      ]
+    };
+
+    // 选择列表基础版 - 根据模式难度会动态扩展
+    const BASE_CHOICES = [
+      {
+        title: '投资方向',
+        options: [
+          { text: '稳健理财（保本小赚）', effect: () => 0.5 },
+          { text: '冒险创业（可能暴富）', effect: (dice) => dice > 3 ? dice * 0.7 : -0.3 }
+        ]
+      },
+      {
+        title: '要不要报仇',
+        options: [
+          { text: '稳健存钱（稳赚0.5元）', effect: () => 0.5 },
+          { text: '买刮刮乐（可能中大奖）', effect: (dice) => dice > 2 ? dice * 0.6 : -0.3 }
+        ]
+      },
+      {
+        title: '选择雨具',
+        options: [
+          { text: '买伞（-0.3元但防雨）', effect: () => -0.3 },
+          { text: '淋雨跑（可能感冒扣钱）', effect: (dice) => dice > 4 ? 0 : -0.5 }
+        ]
+      }
+    ];
+
+    // 额外选择，根据模式难度解锁
+    const EXTRA_CHOICES = [
+      {
+        title: '周末安排',
+        options: [
+          { text: '宅家看剧（不花钱）', effect: () => 0 },
+          { text: '外出旅行（花钱但可能有惊喜）', effect: (dice) => dice > 3 ? dice * 0.8 : -dice * 0.4 }
+        ]
+      },
+      {
+        title: '恋人礼物',
+        options: [
+          { text: '手工制作（花少量钱）', effect: () => -0.2 },
+          { text: '买奢侈品（花很多钱但可能获得惊喜）', effect: (dice) => dice > 4 ? dice * 1.2 : -dice * 0.8 }
+        ]
+      },
+      {
+        title: '朋友求助',
+        options: [
+          { text: '借钱给朋友（可能有风险）', effect: (dice) => dice > 5 ? dice * 0.5 : -dice * 0.4 },
+          { text: '婉拒（保住钱但失去机会）', effect: () => 0.1 }
+        ]
+      },
+      {
+        title: '突发优惠',
+        options: [
+          { text: '囤货（现在多花钱未来省钱）', effect: (dice) => dice > 3 ? dice * 0.6 : -dice * 0.3 },
+          { text: '放弃（保守策略）', effect: () => 0.2 }
+        ]
+      },
+      {
+        title: '学习投资',
+        options: [
+          { text: '购买课程（前期投入）', effect: (dice) => -0.8 },
+          { text: '自学（省钱但收益慢）', effect: () => 0.3 }
+        ]
+      },
+      {
+        title: '恋爱纪念日',
+        options: [
+          { text: '豪华约会（大手笔）', effect: (dice) => dice > 4 ? dice * 1.0 : -dice * 0.6 },
+          { text: '温馨家庭日（省钱暖心）', effect: () => 0.4 }
+        ]
+      },
+      {
+        title: '偶遇路人',
+        options: [
+          { text: '帮助对方（付出但可能有回报）', effect: (dice) => dice > 3 ? dice * 0.7 : -0.5 },
+          { text: '匆匆离开（不花钱但失去机会）', effect: () => 0 }
+        ]
+      },
+      // 新增选择场景
+      {
+        title: '惊喜告白',
+        options: [
+          { text: '精心准备（花钱但增进感情）', effect: (dice) => dice > 3 ? dice * 0.9 : -dice * 0.5 },
+          { text: '简单表达（省钱但效果一般）', effect: () => 0.3 }
+        ]
+      },
+      {
+        title: '约会餐厅',
+        options: [
+          { text: '高级餐厅（贵但氛围好）', effect: (dice) => dice > 4 ? dice * 1.1 : -dice * 0.7 },
+          { text: '街边小馆（便宜但温馨）', effect: () => 0.5 }
+        ]
+      },
+      {
+        title: '生日选择',
+        options: [
+          { text: '惊喜派对（花钱但难忘）', effect: (dice) => dice > 3 ? dice * 1.0 : -dice * 0.6 },
+          { text: '私密庆祝（节约但温情）', effect: () => 0.4 }
+        ]
+      },
+      {
+        title: '度假方案',
+        options: [
+          { text: '豪华酒店（奢侈但享受）', effect: (dice) => dice > 4 ? dice * 1.2 : -dice * 0.8 },
+          { text: '民宿体验（经济但有趣）', effect: () => 0.6 }
+        ]
+      },
+      {
+        title: '购物选择',
+        options: [
+          { text: '品牌专柜（贵但品质好）', effect: (dice) => dice > 3 ? dice * 0.8 : -dice * 0.5 },
+          { text: '网购折扣（便宜但等待长）', effect: () => 0.4 }
+        ]
+      },
+      {
+        title: '电影夜',
+        options: [
+          { text: '电影院VIP（贵但体验好）', effect: (dice) => dice > 3 ? dice * 0.7 : -dice * 0.4 },
+          { text: '家庭影院（省钱但温馨）', effect: () => 0.3 }
+        ]
+      },
+      {
+        title: '礼物包装',
+        options: [
+          { text: '专业包装（贵但精美）', effect: (dice) => dice > 2 ? dice * 0.5 : -dice * 0.3 },
+          { text: '亲手包装（省钱但有心意）', effect: () => 0.4 }
+        ]
+      }
+    ];
+
+    // 甜蜜告白语列表
+    const SWEET_MESSAGES = [
+      "你赢走了我的钱，也赢走了我的心",
+      "愿我的心和红包，都能带给你幸福",
+      "和你在一起的每一秒，都值得我倾尽所有",
+      "你的笑容，比所有的金钱都珍贵",
+      "输给你，是我今生最甜蜜的败仗",
+      "愿这些小钱，换你一生的幸福笑颜",
+      "遇见你，是我最值得的投资",
+      "你是我最珍贵的财富，胜过世间万贯家财",
+      "愿这小小心意，能让你感受我浓浓的爱",
+      "你赢了游戏，我赢了爱情",
+      // 新增告白语
+      "每一枚硬币都承载着我对你的爱，而这爱无价",
+      "钱财会流失，但我对你的爱会永恒",
+      "你的每个微笑，都让我愿意倾尽所有",
+      "愿这红包带给你幸福，如你带给我的温暖一样",
+      "这些钱买不到的，是我为你心动的每一刻",
+      "与你在一起的每一天，都是我最大的财富",
+      "你不仅赢得了游戏，更赢得了我全部的爱",
+      "用这点小钱换你一生的笑颜，值得",
+      "当爱情和金钱放在天平两端，我选择了爱你",
+      "这世间最甜蜜的败仗，就是输给了你的笑容"
+    ];
+
+    // 隐藏模式成功解锁消息
+    const SECRET_MODE_SUCCESS_MESSAGES = [
+      "✨ 恭喜你解锁了隐藏模式！",
+      "🎉 甜蜜宝藏模式已开启，享受稳赚不赔的甜蜜体验吧！",
+      "💖 你发现了我们的小秘密，这个模式保证你每次都能赢！",
+      "🌟 特殊模式激活成功，一起开启甜蜜旅程吧！"
+    ];
+
+    // 隐藏模式失败消息
+    const SECRET_MODE_FAIL_MESSAGES = [
+      "💕 密码不对哦，但没关系，也许下次会更幸运~",
+      "🌸 差一点点就对了，相信你下次一定能猜到！",
+      "🍀 虽然这次没解锁成功，但我们的游戏依然很甜蜜！",
+      "🌈 再接再厉，每一次尝试都是爱的见证~"
+    ];
+
+    // 创建本地存储键
+    const STORAGE_KEY = "sweetGameData";
+
+    // 游戏状态
+    let gameState = {
+      playerMoney: 5.2,
+      botMoney: 20,
+      target: 15,
+      blessing: false,
+      luckyClover: false,
+      round: 0,
+      gameOver: false,
+      history: [],
+      mode: 1,
+      events: [], // 将根据模式动态填充
+      choices: [], // 将根据模式动态填充
+      hasPlayed: false
+    };
+
+    // DOM 元素
+    const playerMoneyEl = document.getElementById('player-money');
+    const botMoneyEl = document.getElementById('bot-money');
+    const messageEl = document.getElementById('message');
+    const diceEl = document.getElementById('dice');
+    const buttonsEl = document.getElementById('buttons');
+    const progressBarEl = document.getElementById('progress-bar');
+    const inputAreaEl = document.getElementById('input-area');
+    const inputTextEl = document.getElementById('input-text');
+    const submitBtnEl = document.getElementById('submit-btn');
+    const startBtnEl = document.getElementById('start-btn');
+    const historyContainerEl = document.getElementById('history-container');
+    const historyEl = document.getElementById('history');
+    const modeGridEl = document.getElementById('mode-grid');
+    const modeSelectionEl = document.getElementById('mode-selection');
+    const gameContainerEl = document.getElementById('game-container');
+    const modeIndicatorEl = document.getElementById('mode-indicator');
+    const adminPanelEl = document.getElementById('admin-panel');
+    const adminTriggerEl = document.getElementById('admin-trigger');
+    const adminPasswordEl = document.getElementById('admin-password');
+    const adminResetEl = document.getElementById('admin-reset');
+    const playedNoticeEl = document.getElementById('played-notice');
+
+    // 初始化游戏数据
+    function initGameData(modeId) {
+      const mode = GAME_MODES.find(m => m.id === modeId) || GAME_MODES[0];
+
+      gameState = {
+        playerMoney: mode.playerMoney,
+        botMoney: mode.botMoney,
+        target: mode.target,
+        blessing: false,
+        luckyClover: false,
+        round: 0,
+        gameOver: false,
+        history: [],
+        mode: mode.id,
+        events: [],
+        choices: [],
+        hasPlayed: false
+      };
+
+      // 根据模式难度设置事件和选择
+      setupEventsAndChoices(mode);
+
+      // 更新UI
+      modeIndicatorEl.textContent = `模式${mode.id}: ${mode.name}`;
+      playerMoneyEl.textContent = gameState.playerMoney.toFixed(1);
+      botMoneyEl.textContent = gameState.botMoney.toFixed(1);
+
+      // 更新欢迎消息，显示正确的奖池金额
+      messageEl.innerHTML = `
+        宝贝，我们来玩个超甜小游戏！<br>
+        你初始资金💰：${gameState.playerMoney.toFixed(1)}元（我爱你哟~）<br>
+        我出${gameState.botMoney.toFixed(1)}元当奖池，赚到${gameState.target.toFixed(1)}元我就认输！<br>
+      `;
+
+      // 更新进度条
+      updateUI();
+
+      return gameState;
+    }
+
+    // 处理游戏结果，确保金额在允许范围内
+    function processGameResult(moneyChange, mode) {
+      // 应用随机波动，增加游戏随机性
+      const randomFactor = 0.8 + Math.random() * 0.4; // 0.8-1.2之间的随机数
+      moneyChange = moneyChange * randomFactor;
+
+      // 如果是隐藏模式，确保所有收益在1-5元之间
+      if (mode.id === 99) {
+        if (moneyChange <= 0) {
+          // 隐藏模式保证赚钱
+          moneyChange = 0.5 + Math.random() * 1.5; // 0.5-2.0之间的随机数
+        }
+
+        // 控制收益上限为5元
+        if (moneyChange > 5.0) {
+          moneyChange = 5.0;
+        }
+
+        // 控制小于2元的概率为70%
+        if (Math.random() < 0.7 && moneyChange > 2.0) {
+          moneyChange = 1.0 + Math.random(); // 1.0-2.0之间
+        }
+      } else {
+        // 对于普通模式，确保不超过最大收益和最大亏损
+        if (moneyChange > 0) {
+          // 收益不超过模式的最大收益
+          moneyChange = Math.min(moneyChange, mode.maxWin);
+        } else {
+          // 亏损不超过模式的最大亏损
+          moneyChange = Math.max(moneyChange, -mode.maxLoss);
+        }
+      }
+
+      return moneyChange;
+    }
+
+    // 根据模式设置事件和选择
+    function setupEventsAndChoices(mode) {
+      // 基础事件总是包含
+      gameState.events = [...BASE_EVENTS];
+
+      // 根据模式难度添加额外事件
+      const goodEventsToAdd = Math.floor(mode.id / 2);  // 每2级难度增加一个好事件
+      const badEventsToAdd = Math.max(0, Math.floor((mode.id - 5) / 2)); // 从第5级开始每2级难度增加一个坏事件
+
+      // 随机选择并添加好事件
+      const shuffledGoodEvents = EXTRA_EVENTS.good.sort(() => Math.random() - 0.5);
+      for (let i = 0; i < goodEventsToAdd && i < shuffledGoodEvents.length; i++) {
+        gameState.events.push({
+          type: 'good',
+          ...shuffledGoodEvents[i]
+        });
+      }
+
+      // 随机选择并添加坏事件
+      const shuffledBadEvents = EXTRA_EVENTS.bad.sort(() => Math.random() - 0.5);
+      for (let i = 0; i < badEventsToAdd && i < shuffledBadEvents.length; i++) {
+        gameState.events.push({
+          type: 'bad',
+          ...shuffledBadEvents[i]
+        });
+      }
+
+      // 基础选择总是包含
+      gameState.choices = [...BASE_CHOICES];
+
+      // 根据模式难度添加额外选择
+      const choicesToAdd = Math.floor(mode.id / 2);
+
+      // 随机选择并添加额外选择
+      const shuffledChoices = EXTRA_CHOICES.sort(() => Math.random() - 0.5);
+      for (let i = 0; i < choicesToAdd && i < shuffledChoices.length; i++) {
+        gameState.choices.push(shuffledChoices[i]);
+      }
+    }
+
+    // 保存游戏数据到本地存储
+    function saveGameData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        playerMoney: gameState.playerMoney,
+        botMoney: gameState.botMoney,
+        mode: gameState.mode,
+        history: gameState.history,
+        hasPlayed: true,
+        gameOver: gameState.gameOver,
+        date: new Date().toLocaleString()
+      }));
+    }
+
+    // 从本地存储加载游戏数据
+    function loadGameData() {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        return JSON.parse(savedData);
+      }
+      return null;
+    }
+
+    // 重置游戏数据
+    function resetGameData() {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    // 显示模式选择界面
+    function showModeSelection() {
+      modeSelectionEl.classList.remove('hide');
+      gameContainerEl.classList.add('hide');
+
+      // 清空模式列表
+      modeGridEl.innerHTML = '';
+
+      // 添加模式按钮
+      GAME_MODES.forEach(mode => {
+        // 跳过隐藏模式
+        if (mode.isHidden) return;
+
+        const modeBtn = document.createElement('div');
+        modeBtn.className = 'mode-btn';
+        modeBtn.innerHTML = `
+          <div class="mode-title">模式${mode.id}: ${mode.name}</div>
+          <div class="mode-desc">${mode.description}</div>
+        `;
+
+        modeBtn.addEventListener('click', () => {
+          initGameData(mode.id);
+          modeSelectionEl.classList.add('hide');
+          gameContainerEl.classList.remove('hide');
+        });
+
+        modeGridEl.appendChild(modeBtn);
+      });
+    }
+
+    // 显示游戏历史记录
+    function showGameHistory(data) {
+      modeSelectionEl.classList.remove('hide');
+      gameContainerEl.classList.add('hide');
+      playedNoticeEl.classList.remove('hide');
+
+      // 清空历史记录容器
+      historyEl.innerHTML = '';
+
+      // 添加模式信息
+      const modeInfo = document.createElement('div');
+      modeInfo.className = 'history-item';
+      const mode = GAME_MODES.find(m => m.id === data.mode) || GAME_MODES[0];
+      modeInfo.innerHTML = `<strong>游戏模式:</strong> 模式${mode.id}: ${mode.name}<br>
+                           <strong>游戏时间:</strong> ${data.date || '未知'}<br>
+                           <strong>最终资金:</strong> ${data.playerMoney.toFixed(1)}元<br>
+                           <strong>结果:</strong> ${data.gameOver ? '游戏结束' : '未完成'}`;
+      historyEl.appendChild(modeInfo);
+
+      // 添加游戏历史记录
+      if (data.history && data.history.length > 0) {
+        // 添加分隔线
+        const separator = document.createElement('div');
+        separator.className = 'history-item';
+        separator.innerHTML = '<hr><strong>游戏记录:</strong>';
+        historyEl.appendChild(separator);
+
+        // 添加历史条目
+        data.history.forEach((item, index) => {
+          const historyItem = document.createElement('div');
+          historyItem.className = 'history-item';
+          historyItem.textContent = item;
+          historyEl.appendChild(historyItem);
+        });
+      }
+
+      historyContainerEl.classList.remove('hide');
+
+      // 禁用模式选择
+      const modeBtns = document.querySelectorAll('.mode-btn');
+      modeBtns.forEach(btn => {
+        btn.style.opacity = '0.5';
+        btn.style.pointerEvents = 'none';
+      });
+    }
+
+    // 更新UI
+    function updateUI() {
+      playerMoneyEl.textContent = gameState.playerMoney.toFixed(1);
+      botMoneyEl.textContent = gameState.botMoney.toFixed(1);
+
+      // 更新进度条
+      const progress = (gameState.playerMoney / gameState.target) * 100;
+      progressBarEl.style.width = `${Math.min(progress, 100)}%`;
+    }
+
+    // 添加历史记录
+    function addHistory(text) {
+      gameState.history.push(text);
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item';
+      historyItem.textContent = text;
+      historyEl.appendChild(historyItem);
+      historyEl.scrollTop = historyEl.scrollHeight;
+
+      if (gameState.history.length > 0) {
+        historyContainerEl.classList.remove('hide');
+      }
+
+      // 保存到本地存储
+      saveGameData();
+    }
+
+    // 掷骰子
+    function rollDice() {
+      return Math.floor(Math.random() * 6) + 1;
+    }
+
+    // 获取随机事件
+    function getRandomEvent() {
+      const mode = GAME_MODES.find(m => m.id === gameState.mode);
+
+      // 应用模式的胜率和输率
+      const randomValue = Math.random();
+      let eventType;
+
+      // 保护机制：资金低于3元时必触发好运事件
+      if (gameState.playerMoney < 3) {
+        eventType = 'good';
+      }
+      // 保护机制：资金低于8元时高概率触发好事件
+      else if (gameState.playerMoney < 8 && randomValue < 0.7) {
+        eventType = 'good';
+      }
+      // 正常随机，但根据模式难度调整
+      else {
+        eventType = randomValue < mode.winChance ? 'good' : 'bad';
+      }
+
+      // 筛选符合类型的事件
+      const filteredEvents = gameState.events.filter(event => event.type === eventType);
+
+      // 随机选择一个事件
+      return filteredEvents[Math.floor(Math.random() * filteredEvents.length)];
+    }
+
+    // 显示消息
+    function showMessage(message) {
+      messageEl.innerHTML = message;
+    }
+
+    // 清空按钮区域
+    function clearButtons() {
+      buttonsEl.innerHTML = '';
+    }
+
+    // 添加按钮
+    function addButton(text, callback) {
+      const button = document.createElement('button');
+      button.textContent = text;
+      button.addEventListener('click', callback);
+      buttonsEl.appendChild(button);
+      return button;
+    }
+
+    // 添加选择按钮
+    function addChoiceButton(text, callback) {
+      const button = document.createElement('button');
+      button.textContent = text;
+      button.className = 'choice-btn';
+      button.addEventListener('click', callback);
+      buttonsEl.appendChild(button);
+      return button;
+    }
+
+    // 游戏结束
+    function gameEnd() {
+      gameState.gameOver = true;
+      clearButtons();
+      diceEl.textContent = '';
+
+      // 获取当前模式
+      const mode = GAME_MODES.find(m => m.id === gameState.mode);
+
+      // 选择一条随机告白语
+      const randomMessage = SWEET_MESSAGES[Math.floor(Math.random() * SWEET_MESSAGES.length)];
+
+      // 计算奖励金额（为模式的1/10）
+      const rewardAmount = Math.round(mode.botMoney / 10);
+
+      const finalMessage = document.createElement('div');
+      finalMessage.className = 'final-message';
+      finalMessage.innerHTML = `
+        🎉 胜利结局：<br>
+        宝贝太厉害啦！你赚到${gameState.target}元~<br>
+        我认输！奉上${rewardAmount}元红包🧧+情话：<br>
+        "${randomMessage}"
+      `;
+
+      const redPacket = document.createElement('div');
+      redPacket.className = 'red-packet';
+      redPacket.textContent = '🧧';
+
+      buttonsEl.appendChild(finalMessage);
+      buttonsEl.appendChild(redPacket);
+
+      // 保存游戏数据
+      saveGameData();
+
+      // 添加游戏结束记录
+      addHistory(`游戏结束: 最终资金 ${gameState.playerMoney.toFixed(1)}元`);
+    }
+
+    // 游戏回合
+    function gameRound() {
+      gameState.round++;
+      clearButtons();
+
+      // 获取当前模式
+      const mode = GAME_MODES.find(m => m.id === gameState.mode);
+
+      // 掷骰子
+      const dice = rollDice();
+      diceEl.textContent = `🎲 ${dice}`;
+
+      // 获取事件
+      let event = getRandomEvent();
+
+      // 特殊保护：资金<10元且掷出了<3点时，触发好事件
+      if (gameState.playerMoney < 10 && dice < 3 && gameState.mode <= 5) {
+        const goodEvents = gameState.events.filter(e => e.type === 'good');
+        event = goodEvents[Math.floor(Math.random() * goodEvents.length)];
+      }
+
+      // 计算金钱变化（应用模式乘数）
+      let moneyChange = event.effect(dice) * mode.eventMultiplier;
+
+      // 处理游戏结果，确保金额在允许范围内
+      moneyChange = processGameResult(moneyChange, mode);
+
+      // 应用祝福效果
+      if (gameState.blessing && moneyChange > 0) {
+        moneyChange *= 2;
+      }
+
+      // 应用四叶草效果
+      if (gameState.luckyClover && moneyChange > 0) {
+        moneyChange *= 1.5;
+        gameState.luckyClover = false; // 使用一次后消失
+      }
+
+      // 格式化金钱变化
+      const formattedChange = moneyChange > 0 ? `+${moneyChange.toFixed(1)}` : moneyChange.toFixed(1);
+
+      // 更新消息
+      let message = `
+        🎲 掷骰子... ${dice}点！<br>
+        ${event.icon} 事件：${event.title}<br>
+        ${event.description}<br>
+      `;
+
+      // 显示祝福效果
+      if (gameState.blessing && moneyChange > 0) {
+        message += `<span class="blessing">✨ 触发精灵祝福！收益x2！</span><br>`;
+        gameState.blessing = false;  // 用完祝福
+      }
+
+      // 显示四叶草效果
+      if (gameState.luckyClover && moneyChange > 0) {
+        message += `<span class="blessing">🍀 触发幸运四叶草！收益x1.5！</span><br>`;
+        gameState.luckyClover = false;  // 用完幸运
+      }
+
+      message += `💰 资金${formattedChange}元<br>`;
+      message += `——————————<br>`;
+
+      // 更新金钱
+      gameState.playerMoney += moneyChange;
+      gameState.botMoney -= moneyChange;
+
+      // 确保不会低于最大亏损限制（保护机制）
+      const minMoney = gameState.playerMoney < mode.playerMoney - mode.maxLoss ?
+                       mode.playerMoney - mode.maxLoss :
+                       gameState.playerMoney;
+
+      if (gameState.playerMoney < minMoney) {
+        gameState.playerMoney = minMoney;
+      }
+
+      // 检查是否达成胜利条件
+      if (gameState.playerMoney >= gameState.target) {
+        showMessage(message + `🎉 恭喜你达到了目标金额！`);
+        updateUI();
+        gameEnd();
+        return;
+      }
+
+      // 显示进度信息
+      const remainingAmount = gameState.target - gameState.playerMoney;
+      message += `😍 进度：还差${remainingAmount.toFixed(1)}元！<br>`;
+
+      showMessage(message);
+      updateUI();
+
+      // 添加历史记录
+      addHistory(`回合${gameState.round}: ${event.title} (${formattedChange}元)`);
+
+      // 随机决策点
+      if (Math.random() < 0.5) {
+        const choiceSet = gameState.choices[Math.floor(Math.random() * gameState.choices.length)];
+        setTimeout(() => {
+          showMessage(message + `👉 ${choiceSet.title}：`);
+
+          // 清空按钮区域，确保没有多余的按钮
+          clearButtons();
+
+          // 添加选择按钮
+          choiceSet.options.forEach((option, index) => {
+            addChoiceButton(`${index + 1}. ${option.text}`, () => {
+              // 立即清除所有按钮，防止多次点击
+              clearButtons();
+
+              const choiceDice = rollDice();
+              let choiceEffect = option.effect(choiceDice) * mode.eventMultiplier;
+
+              // 处理游戏结果，确保金额在允许范围内
+              choiceEffect = processGameResult(choiceEffect, mode);
+
+              // 保护机制：如果钱少于3元，强制好结果
+              if (gameState.playerMoney < 3 && choiceEffect < 0) {
+                choiceEffect = Math.abs(choiceEffect);
+              }
+
+              gameState.playerMoney += choiceEffect;
+              gameState.botMoney -= choiceEffect;
+
+              // 确保不会低于最大亏损限制
+              const minMoney = gameState.playerMoney < mode.playerMoney - mode.maxLoss ?
+                              mode.playerMoney - mode.maxLoss :
+                              gameState.playerMoney;
+
+              if (gameState.playerMoney < minMoney) {
+                gameState.playerMoney = minMoney;
+              }
+
+              const formattedEffect = choiceEffect > 0 ? `+${choiceEffect.toFixed(1)}` : choiceEffect.toFixed(1);
+
+              showMessage(`
+                你选择了：${option.text}<br>
+                🎲 掷骰子... ${choiceDice}点！<br>
+                💰 资金${formattedEffect}元<br>
+                💰 当前资金：${gameState.playerMoney.toFixed(1)}元<br>
+                ——————————<br>
+              `);
+
+              updateUI();
+              addHistory(`选择: ${option.text} (${formattedEffect}元)`);
+
+              // 检查是否达成胜利条件
+              if (gameState.playerMoney >= gameState.target) {
+                gameEnd();
+                return;
+              }
+
+              // 继续游戏（清除之前的所有按钮后添加）
+              clearButtons();
+              addButton('继续', gameRound);
+            });
+          });
+        }, 1000);
+      } else {
+        // 直接继续（确保清除之前的按钮）
+        clearButtons();
+        addButton('继续', gameRound);
+      }
+    }
+
+    // 开始游戏
+    startBtnEl.addEventListener('click', () => {
+      startBtnEl.remove();
+      showMessage('准备开始游戏！掷骰子决定你的命运吧！');
+
+      // 延迟一下开始游戏，增加期待感
+      setTimeout(gameRound, 1000);
+    });
+
+    // 提交输入
+    submitBtnEl.addEventListener('click', () => {
+      const input = inputTextEl.value.trim();
+      if (input) {
+        inputTextEl.value = '';
+        inputAreaEl.classList.add('hide');
+
+        // 检查是否是管理员密码
+        if (input === ADMIN_PASSWORD) {
+          resetGameData();
+        }
+      }
+    });
+
+    // 管理员面板触发器
+    adminTriggerEl.addEventListener('click', () => {
+      adminPanelEl.classList.toggle('hide');
+    });
+
+    // 管理员重置按钮
+    adminResetEl.addEventListener('click', () => {
+      const password = adminPasswordEl.value.trim();
+      if (password === ADMIN_PASSWORD) {
+        resetGameData();
+      } else {
+        showToast('密码错误！');
+      }
+    });
+
+    // 初始化游戏
+    function initGame() {
+      // 检查是否已经玩过
+      const savedData = loadGameData();
+
+      if (savedData && savedData.hasPlayed) {
+        // 显示历史记录
+        showGameHistory(savedData);
+      } else {
+        // 显示模式选择
+        showModeSelection();
+      }
+    }
+
+    // 重置按钮和密码弹窗相关元素
+    const resetGameBtnEl = document.getElementById('reset-game-btn');
+    const resetModalEl = document.getElementById('reset-modal');
+    const resetPasswordEl = document.getElementById('reset-password');
+    const confirmResetEl = document.getElementById('confirm-reset');
+    const cancelResetEl = document.getElementById('cancel-reset');
+
+    // 点击重置按钮，显示密码输入弹窗
+    resetGameBtnEl.addEventListener('click', () => {
+      resetModalEl.classList.remove('hide');
+      resetModalEl.style.display = 'flex';
+      resetPasswordEl.value = ''; // 清空密码输入框
+      resetPasswordEl.focus();
+    });
+
+    // 点击取消按钮，隐藏密码弹窗
+    cancelResetEl.addEventListener('click', () => {
+      resetModalEl.classList.add('hide');
+      resetModalEl.style.display = 'none';
+    });
+
+    // 点击确认重置按钮，验证密码并重置游戏
+    confirmResetEl.addEventListener('click', () => {
+      const password = resetPasswordEl.value.trim();
+      if (password === ADMIN_PASSWORD) {
+        resetGameData();
+        resetModalEl.classList.add('hide');
+        resetModalEl.style.display = 'none';
+      } else {
+        showToast('密码错误！');
+        resetPasswordEl.value = '';
+        resetPasswordEl.focus();
+      }
+    });
+
+    // 监听密码输入框的回车键
+    resetPasswordEl.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        confirmResetEl.click();
+      }
+    });
+
+    // 隐藏模式相关元素
+    const secretModeBtnEl = document.getElementById('secret-mode-btn');
+    const secretModeModalEl = document.getElementById('secret-mode-modal');
+    const secretModePasswordEl = document.getElementById('secret-mode-password');
+    const confirmSecretEl = document.getElementById('confirm-secret');
+    const cancelSecretEl = document.getElementById('cancel-secret');
+
+    // 点击隐藏模式按钮，显示密码输入弹窗
+    secretModeBtnEl.addEventListener('click', () => {
+      secretModeModalEl.classList.remove('hide');
+      secretModeModalEl.style.display = 'flex';
+      secretModePasswordEl.value = ''; // 清空密码输入框
+      secretModePasswordEl.focus();
+    });
+
+    // 点击取消按钮，隐藏密码弹窗
+    cancelSecretEl.addEventListener('click', () => {
+      secretModeModalEl.classList.add('hide');
+      secretModeModalEl.style.display = 'none';
+    });
+
+    // 点击确认解锁按钮，验证密码并解锁隐藏模式
+    confirmSecretEl.addEventListener('click', () => {
+      const password = secretModePasswordEl.value.trim();
+      secretModeModalEl.classList.add('hide');
+      secretModeModalEl.style.display = 'none';
+
+      if (password === SECRET_MODE_PASSWORD) {
+        // 50%概率解锁成功
+        const isSuccess = Math.random() < 0.5;
+
+        if (isSuccess) {
+          // 解锁成功
+          const randomSuccess = SECRET_MODE_SUCCESS_MESSAGES[Math.floor(Math.random() * SECRET_MODE_SUCCESS_MESSAGES.length)];
+          showToast(randomSuccess);
+
+          // 初始化隐藏模式
+          initGameData(99); // 隐藏模式ID为99
+          modeSelectionEl.classList.add('hide');
+          gameContainerEl.classList.remove('hide');
+        } else {
+          // 解锁失败
+          const randomFail = SECRET_MODE_FAIL_MESSAGES[Math.floor(Math.random() * SECRET_MODE_FAIL_MESSAGES.length)];
+          showToast(randomFail);
+        }
+      } else {
+        // 密码错误
+        showToast('密码不正确，请重试');
+      }
+    });
+
+    // 监听隐藏模式密码输入框的回车键
+    secretModePasswordEl.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        confirmSecretEl.click();
+      }
+    });
+
+        // 启动游戏
+    initGame();
+  </script>
 </body>
 </html>
