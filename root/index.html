@@ -15,17 +15,27 @@
       background-color: #fff2f5;
       color: #333;
       padding: 16px;
-      max-width: 500px;
+      max-width: 520px;
       margin: 0 auto;
       min-height: 100vh;
       overflow-x: hidden; /* 防止水平滚动 */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
     .container {
-      background-color: white;
+      background-color: rgba(255, 255, 255, 0.45);
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(255, 105, 180, 0.15);
       padding: 20px;
       margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      width: 92%;
+      max-width: 460px;
     }
     h1 {
       color: #ff69b4;
@@ -44,12 +54,14 @@
       color: #ff69b4;
     }
     .message {
-      background-color: #f8f8f8;
+      background-color: rgba(248, 248, 248, 0.6);
       border-left: 4px solid #ff69b4;
       padding: 12px;
       margin-bottom: 16px;
       border-radius: 0 8px 8px 0;
       line-height: 1.5;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
     }
     .dice {
       font-size: 48px;
@@ -64,21 +76,31 @@
       margin-top: 16px;
     }
     button {
-      background-color: #ff69b4;
+      background-color: rgba(255, 105, 180, 0.9);
       color: white;
       border: none;
       border-radius: 8px;
       padding: 12px;
       font-size: 16px;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      box-shadow: 0 2px 8px rgba(255, 105, 180, 0.3);
     }
     button:hover {
-      background-color: #ff5ba7;
+      background-color: rgba(255, 91, 167, 0.95);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4);
+    }
+    button:active {
+      transform: translateY(1px);
     }
     button:disabled {
-      background-color: #cccccc;
+      background-color: rgba(204, 204, 204, 0.8);
       cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
     .choice-btn {
       background-color: #ffb6c1;
@@ -142,8 +164,10 @@
       overflow-y: auto;
       margin-top: 16px;
       padding: 8px;
-      background-color: rgba(255, 255, 255, 0.7);
+      background-color: rgba(255, 255, 255, 0.6);
       border-radius: 8px;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
     }
     .history-item {
       padding: 8px 0;
@@ -153,23 +177,28 @@
     .mode-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      gap: 12px;
       margin-top: 16px;
+      padding: 0 5px;
     }
     .mode-btn {
       padding: 15px 10px;
       text-align: center;
-      background-color: #ffd1dc;
-      border-radius: 8px;
+      background-color: rgba(255, 209, 220, 0.7);
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      box-shadow: 0 2px 8px rgba(255, 155, 175, 0.2);
     }
     .mode-btn:hover {
-      background-color: #ff9baf;
+      background-color: rgba(255, 155, 175, 0.85);
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
     }
     .mode-btn.active {
-      background-color: #ff69b4;
+      background-color: rgba(255, 105, 180, 0.9);
       color: white;
     }
     .mode-title {
@@ -252,9 +281,43 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* 花瓣特效画布样式 */
+    #petals-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 确保所有主要内容容器都水平垂直居中 */
+    #mode-selection, #game-container, #history-container {
+      max-width: 100%;
+      width: 92%;
+      box-sizing: border-box;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* 使页面在大屏幕上看起来更好 */
+    @media (min-height: 700px) {
+      body {
+        padding: 0;
+      }
+
+      .container {
+        margin: 10px auto;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- 花瓣飘落特效画布 -->
+  <canvas id="petals-canvas"></canvas>
+
   <!-- 轻提示容器 -->
   <div id="toast-container" class="toast-container"></div>
 
@@ -277,7 +340,7 @@
         <!-- 模式将由JavaScript动态填充 -->
       </div>
       <div style="text-align: center; margin-top: 20px;">
-        <button id="secret-mode-btn" style="background-color: #ff69b4; padding: 10px 20px;">
+        <button id="secret-mode-btn" style="background-color: rgba(255, 105, 180, 0.85); padding: 10px 20px; border-radius: 20px; backdrop-filter: blur(3px); box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3);">
           解锁隐藏模式 💖
         </button>
       </div>
@@ -1734,6 +1797,283 @@
 
         // 启动游戏
     initGame();
+
+    // 花瓣飘落特效
+    (function() {
+      const canvas = document.getElementById('petals-canvas');
+      const ctx = canvas.getContext('2d');
+      let petals = [];
+      const petalColors = [
+        '#ffb6c1', // 浅粉红
+        '#ff69b4', // 热情粉红
+        '#ffc0cb', // 粉红
+        '#db7093', // 苍白的紫罗兰红色
+        '#e6a8d7', // 淡紫色
+        '#f8bbd0'  // 浅粉色
+      ];
+
+      // 花瓣类型和计数
+      const petalTypes = 5; // 花瓣类型数量
+      let animationFrameId = null; // 用于存储动画帧ID，方便控制
+      let petalCount = 30; // 默认花瓣数量，将根据设备性能调整
+
+      // 调整画布大小
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+            // 创建花瓣对象
+      function createPetal() {
+        const x = Math.random() * canvas.width;
+        const y = -50; // 从画布顶部以外开始
+        const size = 15 + Math.random() * 15; // 花瓣大小
+        const speedX = 1 - Math.random() * 2; // 水平方向的速度
+        const speedY = 1 + Math.random() * 2; // 垂直方向的速度
+        const rotation = Math.random() * Math.PI * 2; // 初始旋转角度
+        const rotationSpeed = (Math.random() - 0.5) * 0.03; // 旋转速度
+        const type = Math.floor(Math.random() * petalTypes); // 花瓣类型
+        const color = petalColors[Math.floor(Math.random() * petalColors.length)]; // 花瓣颜色
+        const scale = 0.8 + Math.random() * 0.4; // 花瓣缩放
+
+        petals.push({
+          x,
+          y,
+          size,
+          speedX,
+          speedY,
+          rotation,
+          rotationSpeed,
+          type,
+          color,
+          opacity: 0.7 + Math.random() * 0.3,
+          scale,
+          // 添加摆动效果
+          swingFactor: Math.random() * 3,
+          swingOffset: Math.random() * Math.PI * 2,
+          originalX: x
+        });
+      }
+
+            // 绘制单个花瓣
+      function drawPetal(petal) {
+        ctx.save();
+        ctx.translate(petal.x, petal.y);
+        ctx.rotate(petal.rotation);
+        ctx.scale(petal.scale, petal.scale);
+        ctx.globalAlpha = petal.opacity;
+
+        // 绘制花瓣形状
+        ctx.beginPath();
+        ctx.fillStyle = petal.color;
+
+        // 添加径向渐变效果
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, petal.size);
+        gradient.addColorStop(0, petal.color);
+        gradient.addColorStop(1, adjustColor(petal.color, -20));
+        ctx.fillStyle = gradient;
+
+        // 不同类型的花瓣形状
+        switch(petal.type) {
+          case 0: // 椭圆形花瓣
+            ctx.ellipse(0, 0, petal.size / 2, petal.size, 0, 0, Math.PI * 2);
+            break;
+          case 1: // 泪滴形花瓣
+            ctx.moveTo(0, -petal.size / 2);
+            ctx.bezierCurveTo(
+              petal.size / 2, -petal.size / 4,
+              petal.size / 2, petal.size / 4,
+              0, petal.size / 2
+            );
+            ctx.bezierCurveTo(
+              -petal.size / 2, petal.size / 4,
+              -petal.size / 2, -petal.size / 4,
+              0, -petal.size / 2
+            );
+            break;
+          case 2: // 心形花瓣
+            const s = petal.size / 2;
+            ctx.moveTo(0, s * 0.3);
+            ctx.bezierCurveTo(s * 0.3, -s * 0.3, s, -s * 0.3, s, s * 0.3);
+            ctx.bezierCurveTo(s, s * 0.6, s * 0.5, s, 0, s * 1.3);
+            ctx.bezierCurveTo(-s * 0.5, s, -s, s * 0.6, -s, s * 0.3);
+            ctx.bezierCurveTo(-s, -s * 0.3, -s * 0.3, -s * 0.3, 0, s * 0.3);
+            break;
+          case 3: // 圆形花瓣
+            ctx.arc(0, 0, petal.size / 3, 0, Math.PI * 2);
+            break;
+          case 4: // 花朵形花瓣
+            const p = petal.size / 3;
+            for (let i = 0; i < 5; i++) {
+              const angle = (i / 5) * Math.PI * 2;
+              const x = Math.cos(angle) * p;
+              const y = Math.sin(angle) * p;
+              if (i === 0) {
+                ctx.moveTo(x, y);
+              } else {
+                ctx.lineTo(x, y);
+              }
+              const nextAngle = ((i + 0.5) / 5) * Math.PI * 2;
+              const controlX = Math.cos(nextAngle) * (p / 0.6);
+              const controlY = Math.sin(nextAngle) * (p / 0.6);
+              const nextX = Math.cos((i + 1) / 5 * Math.PI * 2) * p;
+              const nextY = Math.sin((i + 1) / 5 * Math.PI * 2) * p;
+              ctx.quadraticCurveTo(controlX, controlY, nextX, nextY);
+            }
+            break;
+        }
+
+        // 添加光晕效果
+        if (Math.random() > 0.7) {
+          ctx.shadowColor = petal.color;
+          ctx.shadowBlur = 5;
+        }
+
+        ctx.fill();
+        ctx.restore();
+      }
+
+                  // 调整颜色亮度
+      function adjustColor(color, amount) {
+        // 将颜色转换为RGB
+        let r, g, b;
+
+        // 处理十六进制颜色
+        if (color.startsWith('#')) {
+          r = parseInt(color.substring(1, 3), 16);
+          g = parseInt(color.substring(3, 5), 16);
+          b = parseInt(color.substring(5, 7), 16);
+        }
+        // 处理rgb()颜色
+        else if (color.startsWith('rgb')) {
+          const rgbValues = color.match(/\d+/g);
+          r = parseInt(rgbValues[0]);
+          g = parseInt(rgbValues[1]);
+          b = parseInt(rgbValues[2]);
+        }
+
+        // 调整亮度
+        r = Math.max(0, Math.min(255, r + amount));
+        g = Math.max(0, Math.min(255, g + amount));
+        b = Math.max(0, Math.min(255, b + amount));
+
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+
+      // 更新花瓣位置
+      function updatePetals() {
+        const now = Date.now() / 1000;
+
+        // 使用filter安全地移除出界的花瓣
+        petals = petals.filter(petal => {
+          // 基本移动
+          petal.y += petal.speedY;
+
+          // 添加左右摆动效果
+          petal.x = petal.originalX + Math.sin(now * 0.7 + petal.swingOffset) * petal.swingFactor;
+
+          // 旋转效果
+          petal.rotation += petal.rotationSpeed;
+
+          // 如果花瓣落出画布，从数组中移除
+          return petal.y <= canvas.height + petal.size;
+        });
+
+        // 保持花瓣数量
+        const targetPetalCount = Math.min(petalCount, Math.floor(canvas.width * canvas.height / 20000));
+        while (petals.length < targetPetalCount) {
+          createPetal();
+        }
+      }
+
+            // 动画循环
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        updatePetals();
+
+        petals.forEach(drawPetal);
+
+        animationFrameId = requestAnimationFrame(animate);
+      }
+
+      // 暂停动画
+      function pauseAnimation() {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+      }
+
+      // 恢复动画
+      function resumeAnimation() {
+        if (!animationFrameId) {
+          animate();
+        }
+      }
+
+      // 在页面可见性变化时控制动画
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          pauseAnimation();
+        } else {
+          resumeAnimation();
+        }
+      });
+
+            // 初始化
+      function init() {
+        resizeCanvas();
+
+        // 初始创建一些花瓣
+        const initialPetalCount = Math.min(30, Math.floor(canvas.width * canvas.height / 25000));
+        for (let i = 0; i < initialPetalCount; i++) {
+          createPetal();
+          // 随机分布初始位置
+          petals[i].y = Math.random() * canvas.height;
+        }
+
+        // 根据设备性能调整花瓣数量
+        adjustPetalCountForPerformance();
+
+        animate();
+      }
+
+      // 根据设备性能调整花瓣数量
+      function adjustPetalCountForPerformance() {
+        // 创建一个测试函数，评估设备性能
+        let startTime = performance.now();
+        let iterations = 0;
+
+        // 运行一个简单的测试循环
+        while (performance.now() - startTime < 5) {
+          iterations++;
+          let testArray = [];
+          for (let i = 0; i < 1000; i++) {
+            testArray.push(Math.random());
+          }
+        }
+
+        // 根据性能调整花瓣数量上限
+        // 性能越好，iterations越大，花瓣数量上限越高
+        if (iterations < 100) {
+          // 低性能设备
+          petalCount = 20;
+        } else if (iterations < 500) {
+          // 中等性能设备
+          petalCount = 30;
+        } else {
+          // 高性能设备
+          petalCount = 50;
+        }
+      }
+
+      // 窗口大小变化时调整画布大小
+      window.addEventListener('resize', resizeCanvas);
+
+      // 启动花瓣动画
+      init();
+    })();
   </script>
 </body>
 </html>
